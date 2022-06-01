@@ -1,5 +1,6 @@
 # pyframe
 
+I will be adding some OpenCV functionalities to modify the images with filter and detect features
 
 
 
