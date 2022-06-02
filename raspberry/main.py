@@ -18,7 +18,8 @@ TABLE_NAME = os.getenv('TABLE_NAME')
 at = airtable.Airtable(BASE_ID, API_KEY)
 images = []
 root = tkinter.Tk()
-duration=1000*60*1
+duration=1000*60*5
+
 msgs=[u"Retweeted by @vicjicama 🎉", 
 u"+20 Likes this week!", 
 u"Awesome place! - @natgeo",
@@ -36,6 +37,15 @@ canvas = tkinter.Canvas(root,width=w,height=h)
 canvas.pack()
 canvas.configure(background='black')
 font = ImageFont.truetype("./font/OpenSansEmoji.ttf", 28, encoding="unic")
+current = None
+elapsed = 0
+currImgHeight = 0
+step = 0
+num = 0
+totalMoves = 0
+increment = 0
+timer = duration
+raster = 250
 
 def lookup():
     global images
@@ -52,6 +62,7 @@ def lookup():
                 attachment=list(itv.values())
                 images.append(attachment[3])
                 print(attachment[3])
+    images.sort()
 
 def close(event):
     root.withdraw() # if you want to bring it back
@@ -69,26 +80,58 @@ def showPIL(pilImage, msg):
     pilImage = pilImage.resize((w,imgHeight), Image.ANTIALIAS)
         
     pilImageMod = ImageDraw.Draw(pilImage)
-    pilImageMod.rectangle(((0, 0), (500, 40)), fill="black")
-    pilImageMod.text((5,5), msg, 'white', font)
+    #pilImageMod.rectangle(((0, 0), (500, 40)), fill="black")
+    #pilImageMod.text((5,5), msg, 'white', font)
     
-    image = ImageTk.PhotoImage(pilImage)
-    root.one = image
-    imagesprite = canvas.create_image(w/2,imgHeight/2,image=image)
+    global elapsed
+    global current
+    global currImgHeight
+    global totalMoves
+    global increment
+    global timer
+    global raster
+    
+    totalMoves = 0
+    increment = 0
+    if imgHeight > h:
+        totalMoves = imgHeight-h
+        increment = int(totalMoves/(duration/raster))
+        if increment == 0:
+            increment = 1
+           
+    currImgHeight = imgHeight
+    current = ImageTk.PhotoImage(pilImage)
+    elapsed = 0
 
-def clock(num):
-    lookup()
-    if num == len(images):
-        root.after(duration,lambda : clock(0))
-    else:
-    	print(num)
-    	im = Image.open(requests.get(images[num], stream=True).raw)
-    	root.after(duration,lambda : clock(num+1))
-    	msidx=random.randint(0, 7)
-    	showPIL(im, msgs[msidx])
+    	
+def move():
+    global elapsed
+    global current
+    global currImgHeight
+    global totalMoves
+    global num
+    global timer
+    global raster
+    
+    if timer >= duration or elapsed > totalMoves:    
+        timer = 0
+        lookup()
+        if num == len(images):
+            num = 0
+        else:
+            im = Image.open(requests.get(images[num], stream=True).raw)
+            num = num + 1
+            print(num)
+            msidx=random.randint(0, 7)
+            showPIL(im, msgs[msidx])
+    
+    timer = timer + raster
+    canvas.create_image(w/2,currImgHeight/2-elapsed,image=current)
+    elapsed = elapsed + increment
+    root.after(raster,lambda : move())
     	
 root.bind('<Escape>', close)     	
-clock(0)
+move()
 root.mainloop()
 
 
