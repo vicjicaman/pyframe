@@ -45,7 +45,7 @@ num = 0
 totalMoves = 0
 increment = 0
 timer = duration
-raster = 250
+raster = 1000
 
 def lookup():
     global images
@@ -115,6 +115,7 @@ def move():
     
     if timer >= duration or elapsed > totalMoves:    
         timer = 0
+        elapsed = 0
         lookup()
         if num == len(images):
             num = 0
